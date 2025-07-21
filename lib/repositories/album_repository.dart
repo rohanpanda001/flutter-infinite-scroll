@@ -7,7 +7,6 @@ class AlbumRepository {
   final String baseUrl = 'https://jsonplaceholder.typicode.com';
 
   Future<List<Album>> fetchAlbums(int page) async {
-    print('Album API call - $page');
     final response = await http.get(Uri.parse('$baseUrl/albums'));
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);

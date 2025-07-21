@@ -45,5 +45,22 @@ class InfiniteListBloc extends Bloc<InfiniteListEvent, InfiniteListState> {
         emit(InfiniteListError());
       }
     });
+
+    on<FetchAlbumPhotos>((event, emit) async {
+      print('fetch photos call');
+      try {
+        final newPhotos = await photoRepository.fetchPhotosForAlbum(event.albumId);
+        final currentState = state;
+        Map<int, List<Photo>> newPhotosMap = (currentState as InfiniteListLoaded).photosMap;
+        newPhotosMap.update(event.albumId, (list) => [...list, ...newPhotos]);
+        emit(InfiniteListLoaded(
+          albums: currentState.albums,
+          photosMap: newPhotosMap,
+        ));
+      } catch (e) {
+        print('Error occurred: $e');
+        emit(InfiniteListError());
+      }
+    });
   }
 }

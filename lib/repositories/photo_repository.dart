@@ -8,7 +8,6 @@ class PhotoRepository {
 
   // Fetch photos for one album
   Future<List<Photo>> fetchPhotosForAlbum(int albumId) async {
-    print('Photo API call - $albumId');
     final response = await http.get(Uri.parse('$baseUrl/photos?albumId=$albumId'));
 
     if (response.statusCode == 200) {

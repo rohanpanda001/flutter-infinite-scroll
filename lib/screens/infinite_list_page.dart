@@ -12,20 +12,38 @@ class InfiniteListPage extends StatefulWidget {
 }
 
 class _InfiniteListPageState extends State<InfiniteListPage> {
-  final ScrollController _controller = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
+  final Map<int, ScrollController> _horizontalScrollControllers = {};
 
   @override
   void initState() {
     super.initState();
-    _controller.addListener(_onScroll);
+    _verticalScrollController.addListener(_onScroll);
     context.read<InfiniteListBloc>().add(FetchAlbums());
   }
 
   void _onScroll() {
-    if (_controller.position.pixels >=
-        _controller.position.maxScrollExtent - 200) {
+    // check vertical scroll end
+    if (_verticalScrollController.position.pixels >=
+        _verticalScrollController.position.maxScrollExtent - 200) {
       context.read<InfiniteListBloc>().add(FetchAlbums());
     }
+  }
+
+  ScrollController? _initHorizontalControllers(int albumId) {
+    if (!_horizontalScrollControllers.containsKey(albumId)) {
+      final controller = ScrollController();
+
+      controller.addListener(() {
+        // check horizontal scroll end
+        if (controller.position.atEdge && controller.position.pixels != 0) {
+          context.read<InfiniteListBloc>().add(FetchAlbumPhotos(albumId: albumId));
+        }
+      });
+
+      _horizontalScrollControllers[albumId] = controller;
+    }
+    return _horizontalScrollControllers[albumId];
   }
 
   @override
@@ -38,31 +56,37 @@ class _InfiniteListPageState extends State<InfiniteListPage> {
             return Center(child: CircularProgressIndicator());
           } else if (state is InfiniteListLoaded) {
             return ListView.builder(
-              controller: _controller,
+              controller: _verticalScrollController,
               itemCount: state.albums.length + 1,
               itemBuilder: (context, index) {
                 if (index >= state.albums.length) {
                   return Center(child: CircularProgressIndicator());
                 }
                 final Album album = state.albums[index];
-                final List<Photo> photos = state.photosMap[album.id] ?? [];
+                final int albumId = album.id;
+                final horizontalScrollController = _initHorizontalControllers(albumId);
+                final List<Photo> photos = state.photosMap[albumId] ?? [];
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('${album.id}. ${album.title}')
+                      child: Text('$albumId. ${album.title}')
                     ),
                     SizedBox(
                       height: 100,
                       child: ListView.builder(
+                        controller: horizontalScrollController,
                         scrollDirection: Axis.horizontal,
-                        itemCount: photos.length,
-                        itemBuilder: (context, index) {
-                          final photo = photos[index];
-                          // using dummy image url since photo.url is not wokring
+                        itemCount: photos.length + 1,
+                        itemBuilder: (context, photoIndex) {
+                          if (photoIndex >= photos.length) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+                          final photo = photos[photoIndex];
                           return Padding(
                             padding: EdgeInsets.symmetric(horizontal: 4.0),
+                            // using dummy image url since photo.url is not wokring
                             child: Image.network('https://dummyjson.com/image/150')
                           );
                         },
@@ -83,7 +107,11 @@ class _InfiniteListPageState extends State<InfiniteListPage> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _verticalScrollController.dispose();
+    for (final controller in _horizontalScrollControllers.values) {
+      controller.dispose();
+    }
+    _horizontalScrollControllers.clear();
     super.dispose();
   }
 }
