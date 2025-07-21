@@ -52,7 +52,7 @@ class _InfiniteListPageState extends State<InfiniteListPage> {
       appBar: AppBar(title: Text('Infinite List with BLoC')),
       body: BlocBuilder<InfiniteListBloc, InfiniteListState>(
         builder: (context, state) {
-          if (state is InfiniteListInitial || state is InfiniteListLoading) {
+          if (state is InfiniteListInitial) {
             return Center(child: CircularProgressIndicator());
           } else if (state is InfiniteListLoaded) {
             return ListView.builder(
