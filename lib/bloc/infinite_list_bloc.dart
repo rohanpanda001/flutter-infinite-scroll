@@ -13,17 +13,12 @@ class InfiniteListBloc extends Bloc<InfiniteListEvent, InfiniteListState> {
 
   InfiniteListBloc({required this.albumRepository, required this.photoRepository}) : super(InfiniteListInitial()) {
     on<FetchAlbums>((event, emit) async {
-      // if (state is InfiniteListLoading) return;
-
       final currentState = state;
       List<Album> albums = [];
-
 
       if (currentState is InfiniteListLoaded) {
         albums = currentState.albums;
       }
-
-      // emit(InfiniteListLoading());
 
       try {
         final newAlbums = await albumRepository.fetchAlbums(page);

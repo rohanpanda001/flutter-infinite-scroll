@@ -6,8 +6,6 @@ abstract class InfiniteListState {}
 
 class InfiniteListInitial extends InfiniteListState {}
 
-class InfiniteListLoading extends InfiniteListState {}
-
 class InfiniteListLoaded extends InfiniteListState {
   final List<Album> albums;
   final Map<int, List<Photo>> photosMap;
